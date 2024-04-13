@@ -5,7 +5,7 @@ import {
   TablaPreRepartos,
   TablaStockParaReparto,
   TablaStockUnificado,
-} from "./components/Table";
+} from "./components/Tables";
 import { useFetch } from "./hooks/useFetch";
 import { PreReparto, StockParaReparto, StockUnificado } from "./types";
 

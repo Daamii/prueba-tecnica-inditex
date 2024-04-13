@@ -1,74 +1,71 @@
 import { PreReparto, StockParaReparto, StockUnificado } from "./types";
 
-interface SatisfaceNecesidad {
-  usaStockEm05: boolean;
-  usaStockEm01: boolean;
-}
-
-const hayStockSuficiente = (
+const obtenerStockPrefiltrado = (
   preReparto: PreReparto,
-  stockUnificado: StockUnificado
-): SatisfaceNecesidad => {
-  if (!preReparto.esEcommerce) {
-    if (stockUnificado.stockEm01 <= preReparto.propuesta)
-      return {
-        usaStockEm05: false,
-        usaStockEm01: true,
-      };
-  }
-
-  if (preReparto.esEcommerce) {
-    if (preReparto.propuesta <= stockUnificado.stockEm05)
-      return {
-        usaStockEm05: true,
-        usaStockEm01: false,
-      };
-    else if (
-      preReparto.propuesta - stockUnificado.stockEm05 <= //teniendo en cuenta que descontamos del stockEm05 que es preferente
-      stockUnificado.stockEm01
-    ) {
-      return {
-        usaStockEm05: preReparto.propuesta <= stockUnificado.stockEm05, //por si stockEm05 es 0
-        usaStockEm01: true,
-      };
-    }
-  }
-
-  return {
-    usaStockEm05: false,
-    usaStockEm01: false,
-  };
+  stocksUnificados: StockUnificado[]
+): StockUnificado[] => {
+  return stocksUnificados.filter((su) => su.key === preReparto.key);
 };
 
-//TODO LIMITACION POR AHORA: ESTO SOLO DEVUELVE UN VALOR
 const buscarRepartoEnStock = (
-  preReparto: PreReparto,
-  stockUnificado: StockUnificado[]
-): StockParaReparto | undefined => {
-  let satisfaceLocal: SatisfaceNecesidad | null = null;
+  pedido: PreReparto,
+  stocksPrefiltrados: StockUnificado[]
+): StockParaReparto[] | undefined => {
+  if (stocksPrefiltrados.length == 0) return;
+  let pedidosPendientes = pedido.propuesta;
+  const order: Record<string, number> = { ZAR: 0, MSR: 1, SILO: 2 };
+  // Ordenar el array por tipoStockDesc: ZAR, MSR, SILO
+  stocksPrefiltrados.sort(
+    (a, b) => order[a.tipoStockDesc] - order[b.tipoStockDesc]
+  );
 
-  const localizacion = stockUnificado.find((su) => {
-    //TODO antes de mirar el stock ecommerce o no mirar la priorización de ZONAS: ZAR > MSR > SILO
-    satisfaceLocal = hayStockSuficiente(preReparto, su);
-    return satisfaceLocal.usaStockEm01 || satisfaceLocal.usaStockEm05;
-  });
+  // en este punto los stocksPrefiltrados ya aplican a la unidad preReparto nos interesa de ella su cantidad de unidades
+  // ademas se depe aplicar la lógica de buscar primero en las zonas por orden
 
-  if (localizacion) {
-    const { usaStockEm01, usaStockEm05 } = satisfaceLocal!;
-    // Aqui por ahora se prioriza que use stock 1 pero debería devolver 1 valor para el 1 y otro para el 5
-    const estadoStock: 1 | 5 = usaStockEm05 ? 5 : usaStockEm01 ? 1 : 1;
+  //para los stocks ordenados primero  comprovamos los campos exlcusivos del ecommerce
+  const locsTipo5 = pedido.esEcommerce
+    ? stocksPrefiltrados
+        .filter((stock) => {
+          if (pedidosPendientes > 0 && pedidosPendientes <= stock.stockEm05) {
+            pedidosPendientes -= stock.stockEm05;
+            return true;
+          }
+        })
+        .map((localizacion) => {
+          return {
+            key: localizacion.key,
+            idTienda: pedido.tiendaId,
+            propuesta: pedido.propuesta,
+            tipoStockDesc: localizacion.tipoStockDesc,
+            estadoStock: 5,
+            posicioncompleta: localizacion.posicioncompleta,
+          } as StockParaReparto;
+        })
+    : [];
 
-    return {
-      key: localizacion.key,
-      idTienda: preReparto.tiendaId,
-      propuesta: preReparto.propuesta,
-      tipoStockDesc: localizacion.tipoStockDesc,
-      estadoStock,
-      posicioncompleta: localizacion.posicioncompleta,
-    };
-  }
+  // si aun quedaran pedidos pendientes los buscariamos en stocks para tiendas fisicas
+  const locsTipo1 =
+    pedidosPendientes > 0
+      ? stocksPrefiltrados
+          .filter((stock) => {
+            if (pedidosPendientes > 0 && pedidosPendientes <= stock.stockEm01) {
+              pedidosPendientes -= stock.stockEm01;
+              return true;
+            }
+          })
+          .map((localizacion) => {
+            return {
+              key: localizacion.key,
+              idTienda: pedido.tiendaId,
+              propuesta: pedido.propuesta,
+              tipoStockDesc: localizacion.tipoStockDesc,
+              estadoStock: 1,
+              posicioncompleta: localizacion.posicioncompleta,
+            } as StockParaReparto;
+          })
+      : [];
 
-  return undefined;
+  return [...locsTipo5, ...locsTipo1];
 };
 
 export const calcularReparto = ({
@@ -78,13 +75,17 @@ export const calcularReparto = ({
   preReparto: PreReparto[];
   stockUnificado: StockUnificado[];
 }): StockParaReparto[] | undefined => {
-  console.log(preReparto.length);
-  const resultado = preReparto
-    .map((pr) => buscarRepartoEnStock(pr, stockUnificado))
-    .filter(Boolean) as StockParaReparto[];
-  // .filter((res): res is StockParaReparto => res !== undefined);
+  const resultadosAvanzados: StockParaReparto[] = preReparto.flatMap((pr) => {
+    const stockPrefiltrado: StockUnificado[] = obtenerStockPrefiltrado(
+      pr,
+      stockUnificado
+    ).filter(Boolean) as StockUnificado[];
 
-  console.log("resultado->", resultado.length);
+    if (stockPrefiltrado) {
+      return buscarRepartoEnStock(pr, stockPrefiltrado) || [];
+    }
+    return [];
+  });
 
-  return resultado;
+  return resultadosAvanzados;
 };

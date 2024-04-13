@@ -42,7 +42,6 @@ export const TablaStockUnificado = ({ data }: { data: StockUnificado[] }) => {
       </thead>
       <tbody>
         {data.map((item, index) => {
-          // if (item.tipoStockDesc != "MSR")
           return (
             <tr key={index}>
               <td>{item.key}</td>

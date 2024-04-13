@@ -11,11 +11,11 @@ export const TablaStockParaReparto = ({
       <thead>
         <tr>
           <th>Key</th>
-          <th>Id_Tienda</th>
+          <th>Id Tienda</th>
           <th>Propuesta</th>
-          <th>Tipo_Stock_Desc</th>
-          <th>Estado_Stock</th>
-          <th>Posición_Completa</th>
+          <th>Tipo Stock Desc</th>
+          <th>Estado Stock</th>
+          <th>Posición Completa</th>
         </tr>
       </thead>
       <tbody>

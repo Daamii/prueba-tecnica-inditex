@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import { calcularReparto } from "./CalculadorReparto";
-import { TablaStockParaReparto } from "./components/Tables";
+import { TablaStockParaReparto } from "./components/TablaStockParaReparto";
 import { useFetch } from "./hooks/useFetch";
 import { PreReparto, StockParaReparto, StockUnificado } from "./types";
 

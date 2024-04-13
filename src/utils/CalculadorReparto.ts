@@ -1,4 +1,4 @@
-import { PreReparto, StockParaReparto, StockUnificado } from "./types";
+import { PreReparto, StockParaReparto, StockUnificado } from "../types";
 
 const obtenerStockPrefiltradoOrdenado = (
   preReparto: PreReparto,

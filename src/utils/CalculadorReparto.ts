@@ -1,20 +1,26 @@
 import { PreReparto, StockParaReparto, StockUnificado } from "../types";
 
-const obtenerStockPrefiltradoOrdenado = (
-  preReparto: PreReparto,
-  stocksUnificados: StockUnificado[]
-): StockUnificado[] => {
-  const stocksPrefiltrados = stocksUnificados.filter(
-    (su) => su.key === preReparto.key
-  );
+// para un listado de pre-repartos y stocks calcular los resultado de disponibilidad y localización
+export const calcularReparto = ({
+  preReparto,
+  stockUnificado,
+}: {
+  preReparto: PreReparto[];
+  stockUnificado: StockUnificado[];
+}): StockParaReparto[] | undefined => {
+  const resultados: StockParaReparto[] = preReparto.flatMap((pr) => {
+    const stockPrefiltrado: StockUnificado[] = obtenerStockPrefiltradoOrdenado(
+      pr,
+      stockUnificado
+    ).filter(Boolean) as StockUnificado[];
 
-  // Ordenar el array por tipoStockDesc: ZAR, MSR, SILO
-  const order: Record<string, number> = { ZAR: 0, MSR: 1, SILO: 2 };
-  stocksPrefiltrados.sort(
-    (a, b) => order[a.tipoStockDesc] - order[b.tipoStockDesc]
-  );
+    if (stockPrefiltrado) {
+      return buscarRepartoEnStock(pr, stockPrefiltrado) || [];
+    }
+    return [];
+  });
 
-  return stocksPrefiltrados;
+  return resultados;
 };
 
 // Función que calcula el reparto para un pedido específico del pre-reparto
@@ -72,24 +78,19 @@ const buscarRepartoEnStock = (
   return [...locsTipo5, ...locsTipo1];
 };
 
-export const calcularReparto = ({
-  preReparto,
-  stockUnificado,
-}: {
-  preReparto: PreReparto[];
-  stockUnificado: StockUnificado[];
-}): StockParaReparto[] | undefined => {
-  const resultados: StockParaReparto[] = preReparto.flatMap((pr) => {
-    const stockPrefiltrado: StockUnificado[] = obtenerStockPrefiltradoOrdenado(
-      pr,
-      stockUnificado
-    ).filter(Boolean) as StockUnificado[];
+const obtenerStockPrefiltradoOrdenado = (
+  preReparto: PreReparto,
+  stocksUnificados: StockUnificado[]
+): StockUnificado[] => {
+  const stocksPrefiltrados = stocksUnificados.filter(
+    (su) => su.key === preReparto.key
+  );
 
-    if (stockPrefiltrado) {
-      return buscarRepartoEnStock(pr, stockPrefiltrado) || [];
-    }
-    return [];
-  });
+  // Ordenar el array por tipoStockDesc: ZAR, MSR, SILO
+  const order: Record<string, number> = { ZAR: 0, MSR: 1, SILO: 2 };
+  stocksPrefiltrados.sort(
+    (a, b) => order[a.tipoStockDesc] - order[b.tipoStockDesc]
+  );
 
-  return resultados;
+  return stocksPrefiltrados;
 };

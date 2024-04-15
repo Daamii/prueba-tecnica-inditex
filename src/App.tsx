@@ -4,11 +4,11 @@ import { TablaStockParaReparto } from "./components/TablaStockParaReparto";
 import { useFetch } from "./hooks/useFetch";
 import { PreReparto, StockParaReparto, StockUnificado } from "./types";
 
+// urls locales de fetching de datos
 const PRE_REPARTO_URL = "../public/Prereparto_bruto.json";
 const STOCK_URL = "../public/Stock_unificado.json";
 
-/********/
-
+// constantes de filtrado
 const filtroGrupoLocalizacionDesc = [
   "CICLO 2 GRUPO A2",
   "CICLO 1 GRUPO B",
@@ -16,8 +16,6 @@ const filtroGrupoLocalizacionDesc = [
 ];
 
 const filtroEsECommerce = 1;
-
-/********/
 
 function App() {
   //fetching de datos de los archivos json

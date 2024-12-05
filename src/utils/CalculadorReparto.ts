@@ -23,6 +23,24 @@ export const calcularReparto = ({
   return resultados;
 };
 
+// Se filtra el stock para el prereparto y ordena por prioridad
+const obtenerStockPrefiltradoOrdenado = (
+  preReparto: PreReparto,
+  stocksUnificados: StockUnificado[]
+): StockUnificado[] => {
+  const stocksPrefiltrados = stocksUnificados.filter(
+    (su) => su.key === preReparto.key
+  );
+
+  // Ordenar el array por tipoStockDesc: ZAR, MSR, SILO
+  const order: Record<string, number> = { ZAR: 0, MSR: 1, SILO: 2 };
+  stocksPrefiltrados.sort(
+    (a, b) => order[a.tipoStockDesc] - order[b.tipoStockDesc]
+  );
+
+  return stocksPrefiltrados;
+};
+
 // Función que calcula el reparto para un pedido específico del pre-reparto
 const buscarRepartoEnStock = (
   pedido: PreReparto,
@@ -47,7 +65,7 @@ const buscarRepartoEnStock = (
             idTienda: pedido.tiendaId,
             propuesta: pedido.propuesta,
             tipoStockDesc: localizacion.tipoStockDesc,
-            estadoStock: 5,
+            estadoStock: 5, // porque es de tipo eCommerce
             posicioncompleta: localizacion.posicioncompleta,
           } as StockParaReparto;
         })
@@ -69,28 +87,11 @@ const buscarRepartoEnStock = (
               idTienda: pedido.tiendaId,
               propuesta: pedido.propuesta,
               tipoStockDesc: localizacion.tipoStockDesc,
-              estadoStock: 1,
+              estadoStock: 1, // porque es de tiendas físicas
               posicioncompleta: localizacion.posicioncompleta,
             } as StockParaReparto;
           })
       : [];
 
   return [...locsTipo5, ...locsTipo1];
-};
-
-const obtenerStockPrefiltradoOrdenado = (
-  preReparto: PreReparto,
-  stocksUnificados: StockUnificado[]
-): StockUnificado[] => {
-  const stocksPrefiltrados = stocksUnificados.filter(
-    (su) => su.key === preReparto.key
-  );
-
-  // Ordenar el array por tipoStockDesc: ZAR, MSR, SILO
-  const order: Record<string, number> = { ZAR: 0, MSR: 1, SILO: 2 };
-  stocksPrefiltrados.sort(
-    (a, b) => order[a.tipoStockDesc] - order[b.tipoStockDesc]
-  );
-
-  return stocksPrefiltrados;
 };

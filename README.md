@@ -1,5 +1,15 @@
 # Prueba técnica
 
+## Comandos para correr el proyecto
+
+> yarn
+
+> yarn dev
+
+Abrir http://localhost:5173/
+
+## Enunciado y respuestas
+
 ### 1. Sabiendo que desde almacén, necesitan saber las posiciones de stock de almacén que deben mover para satisfacer la propuesta de reparto para todas las tiendas y artículos que cumplan estos parámetros:
 
 ### - grupoLocalizacionDesc = “CICLO 2 GRUPO A2” y “CICLO 1 GRUPO B” y “CICLO 1 GRUPO A2”

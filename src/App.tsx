@@ -9,6 +9,8 @@ const PRE_REPARTO_URL = "../public/Prereparto_bruto.json";
 const STOCK_URL = "../public/Stock_unificado.json";
 
 // constantes de filtrado
+// en un proyecto más avanzado con filtros modificables
+// estas constantes serían valores mutables prodecendetes de un input
 const filtroGrupoLocalizacionDesc = [
   "CICLO 2 GRUPO A2",
   "CICLO 1 GRUPO B",
@@ -31,7 +33,9 @@ function App() {
   //resultado
   const [stockCalculado, setStockCalculado] = useState<StockParaReparto[]>([]);
 
-  // aplicar filtrado
+  // aplicar filtrado del pre reparto
+  // en este caso los filtros del problema plantenado no cambian
+  // pero en caso de que fuera dinámico aquí se filtarían las necesidades para el pre reparto
   useEffect(() => {
     const newData = preReparto?.filter(
       (p) =>
@@ -43,6 +47,7 @@ function App() {
 
   // calculo de stock dado un prereparto y un stock disponible
   useEffect(() => {
+    // early return para evitar calcular reparto mientras los datos non estén listos
     if (
       !preRepartoFiltrado ||
       preRepartoFiltrado?.length == 0 ||

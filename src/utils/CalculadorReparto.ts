@@ -46,52 +46,50 @@ const buscarRepartoEnStock = (
   pedido: PreReparto,
   stocksPrefiltrados: StockUnificado[]
 ): StockParaReparto[] | undefined => {
-  if (stocksPrefiltrados.length == 0) return;
+  if (stocksPrefiltrados.length === 0) return;
 
   let pedidosPendientes = pedido.propuesta;
+  const resultado: StockParaReparto[] = [];
 
-  // priorizando los stocks exlcusivos de eCommerce
-  const locsTipo5 = pedido.esEcommerce
-    ? stocksPrefiltrados
-        .filter((stock) => {
-          if (pedidosPendientes > 0 && pedidosPendientes <= stock.stockEm05) {
-            pedidosPendientes -= stock.stockEm05;
-            return true;
-          }
-        })
-        .map((localizacion) => {
-          return {
-            key: localizacion.key,
-            idTienda: pedido.tiendaId,
-            propuesta: pedido.propuesta,
-            tipoStockDesc: localizacion.tipoStockDesc,
-            estadoStock: 5, // porque es de tipo eCommerce
-            posicioncompleta: localizacion.posicioncompleta,
-          } as StockParaReparto;
-        })
-    : [];
+  // Priorizar stocks exclusivos de eCommerce (estado 5)
+  if (pedido.esEcommerce) {
+    for (const stock of stocksPrefiltrados) {
+      if (pedidosPendientes <= 0) break; // Terminar si ya se han cubierto los pedidos
+      if (stock.stockEm05 > 0) {
+        const cantidadUtilizada = Math.min(pedidosPendientes, stock.stockEm05);
+        pedidosPendientes -= cantidadUtilizada;
 
-  // si quedan pedidos pendientes se buscan en stocks para tiendas fisicas
-  const locsTipo1 =
-    pedidosPendientes > 0
-      ? stocksPrefiltrados
-          .filter((stock) => {
-            if (pedidosPendientes > 0 && pedidosPendientes <= stock.stockEm01) {
-              pedidosPendientes -= stock.stockEm01;
-              return true;
-            }
-          })
-          .map((localizacion) => {
-            return {
-              key: localizacion.key,
-              idTienda: pedido.tiendaId,
-              propuesta: pedido.propuesta,
-              tipoStockDesc: localizacion.tipoStockDesc,
-              estadoStock: 1, // porque es de tiendas físicas
-              posicioncompleta: localizacion.posicioncompleta,
-            } as StockParaReparto;
-          })
-      : [];
+        resultado.push({
+          key: stock.key,
+          idTienda: pedido.tiendaId,
+          propuesta: cantidadUtilizada,
+          tipoStockDesc: stock.tipoStockDesc,
+          estadoStock: 5,
+          posicioncompleta: stock.posicioncompleta,
+        });
+      }
+    }
+  }
 
-  return [...locsTipo5, ...locsTipo1];
+  // Si quedan pedidos pendientes, buscar en stocks de tiendas físicas (estado 1)
+  if (pedidosPendientes > 0) {
+    for (const stock of stocksPrefiltrados) {
+      if (pedidosPendientes <= 0) break; // Terminar si ya se han cubierto los pedidos
+      if (stock.stockEm01 > 0) {
+        const cantidadUtilizada = Math.min(pedidosPendientes, stock.stockEm01);
+        pedidosPendientes -= cantidadUtilizada;
+
+        resultado.push({
+          key: stock.key,
+          idTienda: pedido.tiendaId,
+          propuesta: cantidadUtilizada,
+          tipoStockDesc: stock.tipoStockDesc,
+          estadoStock: 1,
+          posicioncompleta: stock.posicioncompleta,
+        });
+      }
+    }
+  }
+
+  return resultado;
 };
